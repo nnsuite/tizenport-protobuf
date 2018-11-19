@@ -1,0 +1,68 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+include /usr/share/dpkg/architecture.mk
+ifeq ($(origin CXX),default)
+CXX := $(DEB_HOST_GNU_TYPE)-g++
+endif
+
+ifneq (,$(findstring $(DEB_BUILD_ARCH), armel m68k mips mipsel powerpc powerpcspe sh4))
+export DEB_LDFLAGS_MAINT_APPEND  = -latomic
+endif
+
+%:
+	dh $@
+
+ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+override_dh_auto_configure:
+	NOCONFIGURE=1 ./autogen.sh
+	dh_auto_configure -- --host=$(DEB_BUILD_GNU_TYPE)
+
+endif
+
+override_dh_auto_build-arch:
+	NOCONFIGURE=1 ./autogen.sh
+	sh ./configure
+	dh_auto_build --arch
+	bash -x ./generate_descriptor_proto.sh
+
+ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+	cp -Rv src/.libs debian/native_protoc
+	$(MAKE) clean
+	dh_auto_configure -- --with-protoc=$(CURDIR)/debian/run_protoc
+	dh_auto_build --arch
+endif
+
+override_dh_auto_build-indep:
+	dh_auto_build --indep
+
+
+override_dh_clean:
+	$(RM) -rv gmock
+	dh_clean
+	$(RM) -f config.h config.log config.status
+	$(RM) -f *.pc
+	$(RM) -f google-protobuf.gemspec
+	$(RM) -f libtool stamp-h1
+	find $(CURDIR) -name Makefile -delete
+
+override_dh_auto_test-arch:
+	dh_auto_test --arch
+
+override_dh_auto_test-indep:
+	:
+
+override_dh_auto_clean-arch:
+	dh_auto_clean --arch
+
+override_dh_auto_clean-indep:
+	dh_auto_clean --indep
+
+override_dh_auto_install-arch:
+	dh_auto_install --arch
+
+override_dh_auto_install-indep:
+	dh_auto_install --indep
+
+override_dh_install-arch:
+	dh_install --arch

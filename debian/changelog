@@ -1,0 +1,5 @@
+protobuf (3.6.1-4) unstable; urgency=medium
+
+  * Note that -dev package contains common proto files (closes: #842159).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 23 Oct 2018 14:33:32 +0000
