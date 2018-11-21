@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Build-Depends:
 # Debian build system
- , debhelper (>= 9), autoconf
+ , debhelper (>= 9), autoconf, automake, libtool
 # C/C++
  , zlib1g-dev
  , libgtest-dev
