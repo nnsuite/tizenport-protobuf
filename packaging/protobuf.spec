@@ -5,7 +5,9 @@ Release:        1%{?dist}
 License:        BSD
 Group:          Development/Libraries
 Source:         https://github.com/google/protobuf/releases/download/v%{version}/protobuf-all-%{version}.tar.gz
-Source1001:     protobuf.manifest
+#Source1:        proto.vim
+#Patch3:         0001-Add-generic-GCC-support-for-atomic-operations.patch
+#Patch4:         protobuf-2.5.0-makefile.patch
 URL:            https://github.com/google/protobuf
 BuildRequires:  automake autoconf libtool pkgconfig zlib-devel
 
@@ -98,8 +100,6 @@ descriptions in Vim editor
 
 %prep
 %setup -q -n %{name}-%{version}
-cp %{SOURCE1001} .
-chmod 644 examples/*
 
 #%patch3 -p1 -b .generic-atomics
 #%patch4 -p1 -b .generic-atomics-makefile
@@ -133,51 +133,42 @@ install -p -m 644 -D editors/proto.vim %{buildroot}%{_datadir}/vim/vimfiles/synt
 %postun compiler -p /sbin/ldconfig
 
 %files
-%manifest protobuf.manifest
 %defattr(-, root, root, -)
 %{_libdir}/libprotobuf.so.*
 %doc CHANGES.txt CONTRIBUTORS.txt README.md
 
 %files compiler
-%manifest protobuf.manifest
 %defattr(-, root, root, -)
 %{_bindir}/protoc
 %{_libdir}/libprotoc.so.*
 %doc README.md
 
 %files devel
-%manifest protobuf.manifest
 %defattr(-, root, root, -)
 %dir %{_includedir}/google
 %{_includedir}/google/protobuf/
 %{_libdir}/libprotobuf.so
 %{_libdir}/libprotoc.so
 %{_libdir}/pkgconfig/protobuf.pc
-%doc examples/add_person.cc examples/addressbook.proto examples/list_people.cc examples/Makefile
 
 %files static
-%manifest protobuf.manifest
 %defattr(-, root, root, -)
 %{_libdir}/libprotobuf.a
 %{_libdir}/libprotoc.a
 
 %files lite
-%manifest protobuf.manifest
 %defattr(-, root, root, -)
 %{_libdir}/libprotobuf-lite.so.*
 
 %files lite-devel
-%manifest protobuf.manifest
 %defattr(-, root, root, -)
 %{_libdir}/libprotobuf-lite.so
 %{_libdir}/pkgconfig/protobuf-lite.pc
 
 %files lite-static
-%manifest protobuf.manifest
 %defattr(-, root, root, -)
 %{_libdir}/libprotobuf-lite.a
 
 %files vim
-%manifest protobuf.manifest
 %defattr(-, root, root, -)
 %{_datadir}/vim/vimfiles/syntax/proto.vim

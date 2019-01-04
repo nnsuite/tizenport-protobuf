@@ -11,34 +11,35 @@ export DEB_LDFLAGS_MAINT_APPEND  = -latomic
 endif
 
 %:
-	dh $@
+	dh $@ --with autoreconf
 
 ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
 override_dh_auto_configure:
-	NOCONFIGURE=1 ./autogen.sh
+	# build for the native (i.e. build) architecture, as we need
+	# the protoc compiler for the native arch.
 	dh_auto_configure -- --host=$(DEB_BUILD_GNU_TYPE)
 
 endif
 
 override_dh_auto_build-arch:
-	NOCONFIGURE=1 ./autogen.sh
-	sh ./configure
+## Chicken<->Egg problem: protobuf requires self-generated .pb.go files to
+## be built. First we build it normally; then "generate_descriptor_proto.sh"
+## generates .pb.go files and replaces 'em if they are different as well as
+## invokes "make protoc" which re-builds "src/protoc" if required.
 	dh_auto_build --arch
 	bash -x ./generate_descriptor_proto.sh
 
 ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+	# save the native compiler
 	cp -Rv src/.libs debian/native_protoc
+	# clean everything but regenerated .pb.{cc,go} files
 	$(MAKE) clean
+	# cross build
 	dh_auto_configure -- --with-protoc=$(CURDIR)/debian/run_protoc
 	dh_auto_build --arch
 endif
 
-override_dh_auto_build-indep:
-	dh_auto_build --indep
-
-
 override_dh_clean:
-	$(RM) -rv gmock
 	dh_clean
 	$(RM) -f config.h config.log config.status
 	$(RM) -f *.pc
@@ -46,23 +47,14 @@ override_dh_clean:
 	$(RM) -f libtool stamp-h1
 	find $(CURDIR) -name Makefile -delete
 
-override_dh_auto_test-arch:
-	dh_auto_test --arch
-
-override_dh_auto_test-indep:
-	:
-
-override_dh_auto_clean-arch:
-	dh_auto_clean --arch
-
-override_dh_auto_clean-indep:
-	dh_auto_clean --indep
-
-override_dh_auto_install-arch:
-	dh_auto_install --arch
-
-override_dh_auto_install-indep:
-	dh_auto_install --indep
-
 override_dh_install-arch:
 	dh_install --arch
+
+	# Convert doc dir to symlink for the -dev packages.
+	rm -rf $(CURDIR)/debian/libprotobuf-dev/usr/share/doc/libprotobuf-dev
+	ln -s libprotobuf17 $(CURDIR)/debian/libprotobuf-dev/usr/share/doc/libprotobuf-dev
+	rm -rf $(CURDIR)/debian/libprotoc-dev/usr/share/doc/libprotoc-dev
+	ln -s libprotoc17 $(CURDIR)/debian/libprotoc-dev/usr/share/doc/libprotoc-dev
+
+	# Remove compiler headers from libprotobuf-dev.
+	rm -rf $(CURDIR)/debian/libprotobuf-dev/usr/include/google/protobuf/compiler
