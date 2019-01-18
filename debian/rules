@@ -1,6 +1,12 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+ifeq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+export DEB_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+else
+export DEB_MULTIARCH ?= $(shell dpkg-architecture -qDEB_BUILD_MULTIARCH)
+endif
+
 include /usr/share/dpkg/architecture.mk
 ifeq ($(origin CXX),default)
 CXX := $(DEB_HOST_GNU_TYPE)-g++
@@ -13,16 +19,19 @@ endif
 %:
 	dh $@
 
-ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+PROTOBUF_INSTALL_PREFIX=/usr
+PROTOBUF_INSTALL_LIBDIR=$(PROTOBUF_INSTALL_PREFIX)/lib/$(DEB_MULTIARCH)
+
 override_dh_auto_configure:
 	NOCONFIGURE=1 ./autogen.sh
-	dh_auto_configure -- --host=$(DEB_BUILD_GNU_TYPE)
+ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+	dh_auto_configure -- --host=$(DEB_BUILD_GNU_TYPE) --prefix=$(PROTOBUF_INSTALL_PREFIX) --libdir=$(PROTOBUF_INSTALL_LIBDIR)
 
+else
+	dh_auto_configure -- --prefix=$(PROTOBUF_INSTALL_PREFIX) --libdir=$(PROTOBUF_INSTALL_LIBDIR)
 endif
 
 override_dh_auto_build-arch:
-	NOCONFIGURE=1 ./autogen.sh
-	sh ./configure
 	dh_auto_build --arch
 	bash -x ./generate_descriptor_proto.sh
 
@@ -35,7 +44,6 @@ endif
 
 override_dh_auto_build-indep:
 	dh_auto_build --indep
-
 
 override_dh_clean:
 	$(RM) -rv gmock
