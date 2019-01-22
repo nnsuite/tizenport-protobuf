@@ -1,1 +1,2 @@
-/usr/lib/*/libprotoc*.so.*
+/usr/lib/*/libprotoc*.so.17.*
+/usr/lib/*/libprotoc*.so.17
