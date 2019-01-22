@@ -2,5 +2,6 @@
 /usr/lib/*/libprotobuf-lite.a
 /usr/lib/*/libprotobuf.so
 /usr/lib/*/libprotobuf-lite.so
-/usr/lib/*/pkgconfig/*
-/usr/include
+/usr/lib/*/pkgconfig/protobuf-lite.pc
+/usr/lib/*/pkgconfig/protobuf.pc
+/usr/include/google/protobuf/*

@@ -1,1 +1,2 @@
-/usr/lib/*/libprotobuf.so.*
+/usr/lib/*/libprotobuf.so.17.*
+/usr/lib/*/libprotobuf.so.17
